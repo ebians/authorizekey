@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthorizeKey – Upload SSH Key</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- CSRF token for XHR requests -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🔑</span>
+        <h1>Upload SSH Public Key</h1>
+        <p class="subtitle">Logged in as <strong>{{ username }}</strong></p>
+      </div>
+
+      <!-- Drop zone -->
+      <div id="drop-zone" class="drop-zone" role="button" tabindex="0"
+           aria-label="Drag and drop your SSH public key file here, or press Enter to browse">
+        <div class="drop-zone-icon">📂</div>
+        <p class="drop-zone-text">Drag &amp; drop your <code>.pub</code> key file here</p>
+        <p class="drop-zone-hint">or <span class="link">click / press Enter</span> to browse</p>
+        <input type="file" id="file-input" accept=".pub,text/plain" hidden aria-hidden="true">
+      </div>
+
+      <!-- Selected file info -->
+      <div id="file-info" class="file-info hidden">
+        <span class="file-icon">📄</span>
+        <span id="file-name" class="file-name"></span>
+        <button id="clear-file" class="btn-icon" title="Remove file" aria-label="Remove selected file">✕</button>
+      </div>
+
+      <!-- Key preview -->
+      <div id="key-preview" class="key-preview hidden">
+        <h3>Key Preview</h3>
+        <pre id="key-content" class="key-content"></pre>
+      </div>
+
+      <!-- Status message -->
+      <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button id="upload-btn" class="btn btn-primary" disabled>
+          Add to authorized_keys
+        </button>
+
+        <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-secondary">Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const dropZone   = document.getElementById('drop-zone');
+      const fileInput  = document.getElementById('file-input');
+      const fileInfo   = document.getElementById('file-info');
+      const fileName   = document.getElementById('file-name');
+      const clearBtn   = document.getElementById('clear-file');
+      const keyPreview = document.getElementById('key-preview');
+      const keyContent = document.getElementById('key-content');
+      const messageEl  = document.getElementById('message');
+      const uploadBtn  = document.getElementById('upload-btn');
+
+      let selectedFile = null;
+
+      // ── Open file dialog ──────────────────────────────────────────────
+      dropZone.addEventListener('click', () => fileInput.click());
+      dropZone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) handleFile(fileInput.files[0]);
+      });
+
+      // ── Drag-and-drop ─────────────────────────────────────────────────
+      ['dragenter', 'dragover'].forEach((evt) => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropZone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((evt) => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length) handleFile(files[0]);
+      });
+
+      // ── Handle a selected file ────────────────────────────────────────
+      function handleFile(file) {
+        clearMessage();
+
+        // Basic client-side size check (16 KB)
+        if (file.size > 16 * 1024) {
+          showMessage('File is too large. SSH public key files are typically under 1 KB.', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result.trim();
+          // Simple format check on the client side
+          if (!isLikelyPublicKey(content)) {
+            showMessage('This does not look like a valid SSH public key file.', 'error');
+            resetUI();
+            return;
+          }
+          selectedFile = file;
+          fileName.textContent = file.name;
+          fileInfo.classList.remove('hidden');
+          // Show preview (truncate if very long line)
+          keyContent.textContent = content.length > 200
+            ? content.slice(0, 200) + '…'
+            : content;
+          keyPreview.classList.remove('hidden');
+          uploadBtn.disabled = false;
+        };
+        reader.readAsText(file);
+      }
+
+      // ── Client-side key format heuristic ─────────────────────────────
+      const validTypes = new Set([
+        'ssh-rsa', 'ssh-dss',
+        'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521',
+        'ssh-ed25519',
+        'sk-ecdsa-sha2-nistp256@openssh.com', 'sk-ssh-ed25519@openssh.com',
+      ]);
+
+      function isLikelyPublicKey(content) {
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const parts = trimmed.split(/\s+/);
+          if (parts.length >= 2 && validTypes.has(parts[0])) return true;
+          return false; // First non-blank line is not a key type
+        }
+        return false;
+      }
+
+      // ── Clear selection ───────────────────────────────────────────────
+      clearBtn.addEventListener('click', () => { resetUI(); clearMessage(); });
+
+      function resetUI() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.add('hidden');
+        keyPreview.classList.add('hidden');
+        uploadBtn.disabled = true;
+      }
+
+      // ── Upload ────────────────────────────────────────────────────────
+      uploadBtn.addEventListener('click', () => {
+        if (!selectedFile) return;
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading…';
+
+        const formData = new FormData();
+        formData.append('keyfile', selectedFile);
+
+        // Read CSRF token from meta tag (cached once)
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfMeta ? csrfMeta.content : getCookie('csrf_token');
+
+        fetch('{{ url_for("upload_key") }}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData,
+          credentials: 'same-origin',
+        })
+          .then((res) => res.json().then((data) => ({ status: res.status, data })))
+          .then(({ status, data }) => {
+            if (status === 200 && data.success) {
+              showMessage(data.message, 'success');
+              resetUI();
+            } else {
+              showMessage(data.error || 'Upload failed.', 'error');
+            }
+          })
+          .catch(() => showMessage('Network error. Please try again.', 'error'))
+          .finally(() => {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Add to authorized_keys';
+          });
+      });
+
+      // ── Helpers ───────────────────────────────────────────────────────
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message ' + type;
+      }
+
+      function clearMessage() {
+        messageEl.textContent = '';
+        messageEl.className = 'message hidden';
+      }
+
+      function getCookie(name) {
+        const m = document.cookie.match('(?:^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return m ? decodeURIComponent(m[1]) : '';
+      }
+    })();
+  </script>
+</body>
+</html>

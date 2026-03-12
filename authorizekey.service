@@ -1,0 +1,40 @@
+[Unit]
+Description=AuthorizeKey – SSH Public Key Transfer Web Application
+After=network.target
+
+[Service]
+Type=simple
+# Run as root so the app can write to any user's ~/.ssh/authorized_keys.
+# The app authenticates users via PAM before touching their files.
+User=root
+Group=root
+
+WorkingDirectory=/opt/authorizekey
+
+# Set a strong, stable SECRET_KEY in production:
+#   python3 -c "import secrets; print(secrets.token_hex(32))"
+# then store it in /etc/authorizekey/env (mode 0600, owner root).
+EnvironmentFile=-/etc/authorizekey/env
+
+ExecStart=/opt/authorizekey/venv/bin/gunicorn \
+    --bind 127.0.0.1:5000 \
+    --workers 2 \
+    --threads 2 \
+    --timeout 30 \
+    --log-level info \
+    --access-logfile - \
+    --error-logfile - \
+    app:app
+
+Restart=on-failure
+RestartSec=5
+
+# ── Hardening ──────────────────────────────────────────────────────────────
+# Prevent writing to anywhere except the user home directories
+ReadWritePaths=/root /home
+ProtectSystem=strict
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

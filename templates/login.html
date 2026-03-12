@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthorizeKey – Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🔐</span>
+        <h1>AuthorizeKey</h1>
+        <p class="subtitle">SSH Public Key Manager</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="alerts">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" action="{{ url_for('login') }}" autocomplete="on" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          {{ form.username.label(class="form-label") }}
+          {{ form.username(
+               class="form-control",
+               placeholder="Linux username",
+               autocomplete="username",
+               autofocus=true,
+               spellcheck="false",
+               autocapitalize="none"
+             ) }}
+          {% for error in form.username.errors %}
+            <span class="field-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          {{ form.password.label(class="form-label") }}
+          {{ form.password(
+               class="form-control",
+               placeholder="Password",
+               autocomplete="current-password"
+             ) }}
+          {% for error in form.password.errors %}
+            <span class="field-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">Login</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+# Caddyfile – AuthorizeKey reverse proxy
+#
+# Usage:
+#   1. Replace "your-server-hostname" with your actual hostname or IP.
+#   2. For automatic HTTPS with Let's Encrypt, use a public domain name.
+#      For a LAN / self-signed cert, keep "tls internal".
+#   3. Run: caddy run --config Caddyfile
+
+{
+    # Disable the Caddy admin API endpoint (not needed for this service)
+    admin off
+
+    # Structured JSON logging to stdout
+    log {
+        output stdout
+        format json
+        level  INFO
+    }
+}
+
+# ── HTTPS listener ─────────────────────────────────────────────────────────
+your-server-hostname {
+    # Use a LAN/self-signed cert.  For a public domain remove this line and
+    # Caddy will obtain a Let's Encrypt certificate automatically.
+    tls internal
+
+    # Forward all requests to the Gunicorn/Flask application.
+    reverse_proxy 127.0.0.1:5000
+
+    # ── Security response headers ──────────────────────────────────────
+    header {
+        # Prevent MIME-type sniffing
+        X-Content-Type-Options    nosniff
+        # Disallow embedding in iframes
+        X-Frame-Options           DENY
+        # Enable browser XSS filter
+        X-XSS-Protection          "1; mode=block"
+        # HTTP Strict Transport Security (1 year)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Restrict Referrer information
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        # Basic Content-Security-Policy
+        Content-Security-Policy   "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        # Remove server identification
+        -Server
+    }
+
+    # ── Basic rate limiting (requires caddy-ratelimit plugin) ─────────
+    # Uncomment if you build Caddy with the caddy-ratelimit module:
+    # rate_limit {
+    #     zone login {
+    #         key    {remote_host}
+    #         events 20
+    #         window 1m
+    #     }
+    # }
+
+    # ── Logging ───────────────────────────────────────────────────────
+    log {
+        output stdout
+        format json
+    }
+}
+
+# ── HTTP → HTTPS redirect ──────────────────────────────────────────────────
+http://your-server-hostname {
+    redir https://{host}{uri} permanent
+}

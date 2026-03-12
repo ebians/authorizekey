@@ -1,0 +1,297 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   AuthorizeKey – Stylesheet
+   ────────────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg:         #f0f4f8;
+  --color-card:       #ffffff;
+  --color-primary:    #3b82f6;
+  --color-primary-h:  #2563eb;
+  --color-secondary:  #6b7280;
+  --color-secondary-h:#4b5563;
+  --color-success:    #10b981;
+  --color-error:      #ef4444;
+  --color-border:     #e2e8f0;
+  --color-text:       #1e293b;
+  --color-muted:      #64748b;
+  --radius:           0.75rem;
+  --shadow:           0 4px 24px rgba(0,0,0,0.08);
+  --font:             'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 520px;
+}
+
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card-header {
+  text-align: center;
+}
+
+.card-header .icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.card-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin-top: 0.25rem;
+}
+
+/* ── Alerts ────────────────────────────────────────────────────────────── */
+.alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert {
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.alert-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.alert-info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+/* ── Forms ─────────────────────────────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-family: var(--font);
+  color: var(--color-text);
+  background: #f8fafc;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+  background: #fff;
+}
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--color-error);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: var(--color-primary-h);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: var(--color-secondary-h);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.35rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-icon:hover {
+  color: var(--color-error);
+  background: #fef2f2;
+}
+
+/* ── Drop zone ─────────────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.drop-zone:hover,
+.drop-zone:focus,
+.drop-zone.drag-over {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+  outline: none;
+}
+
+.drop-zone-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.drop-zone-text {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.drop-zone-hint {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.drop-zone .link {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* ── File info ─────────────────────────────────────────────────────────── */
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.file-icon { font-size: 1.1rem; }
+
+.file-name {
+  flex: 1;
+  word-break: break-all;
+  color: #166534;
+  font-weight: 500;
+}
+
+/* ── Key preview ───────────────────────────────────────────────────────── */
+.key-preview {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.key-preview h3 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  margin-bottom: 0.5rem;
+}
+
+.key-content {
+  font-size: 0.78rem;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--color-text);
+}
+
+/* ── Status message ────────────────────────────────────────────────────── */
+.message {
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.message.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.message.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+/* ── Actions row ───────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.actions .btn-primary { flex: 1; }
+
+/* ── Utilities ─────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }

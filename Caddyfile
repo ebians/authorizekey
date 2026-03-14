@@ -7,11 +7,15 @@
 #   3. Run: caddy run --config Caddyfile
 
 {
-    # Disable the Caddy admin API endpoint (not needed for this service)
-    admin off
+    # The admin API (localhost:2019) must remain enabled so that
+    # "caddy reload" / "systemctl reload caddy" can push new config
+    # to the running instance without a full restart.
 
     # Structured JSON logging to stdout
-    log {
+    log {    sudo caddy validate --config /etc/caddy/Caddyfile
+    sudo systemctl reload caddy
+    sudo systemctl status caddy --no-pager -l
+    sudo journalctl -u caddy -n 50 --no-pager
         output stdout
         format json
         level  INFO
@@ -42,7 +46,7 @@ your-server-hostname {
         # Basic Content-Security-Policy
         Content-Security-Policy   "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
         # Remove server identification
-        -Server
+        -Serversudo
     }
 
     # ── Basic rate limiting (requires caddy-ratelimit plugin) ─────────
@@ -63,6 +67,8 @@ your-server-hostname {
 }
 
 # ── HTTP → HTTPS redirect ──────────────────────────────────────────────────
+# NOTE: this block must use http://, not https://, to avoid "ambiguous site
+# definition" errors when the HTTPS listener above uses the same hostname/IP.
 http://your-server-hostname {
     redir https://{host}{uri} permanent
 }
